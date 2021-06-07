@@ -1,29 +1,3 @@
-
-function checkStatusPresence({status, shift}){
-
-  if(shift === "Pagi"){
-    if(status === statusPresence[0] || status === statusPresence[4]){
-          return true
-    }else if(status === statusPresence[5] || status === statusPresence[6]){
-      return false
-    }else{
-      return false
-    }
-  }
-  if(shift === "Malam"){
-    if((status === statusPresence[2] || status === statusPresence[4])){
-        return true
-    }else{
-      return false
-    }
-  }
-
-  // (status === statusPresence[1] || status === statusPresence[4])
-  // (status === statusPresence[1] || status === statusPresence[4])
-  // (status === statusPresence[3] || status === statusPresence[4])
-
-}
-
 function hitungTotalPresensi(){
 
   // const getMonth = (mnth) => {
@@ -40,7 +14,6 @@ function hitungTotalPresensi(){
   // const totalAbsensi = hitungTotalAbsensi(email)
 
   // return {user: email, totalPresence: totalPresence }
-
 
   // console.log(getMonth())
   
@@ -60,17 +33,41 @@ function hitungPresensiTerlambat(){
 
 function hitungTotalAbsensi(email){
 
-  const users = getUsers().filter(user => user.user === email && 
-                (user.status === statusPresence[5] || user.status === statusPresence[6] ))
-  const count = users.length
+  const dt = new Date()
+  const mnth = dt.getMonth()
+  const yr = dt.getFullYear()
 
-  return count
+  const getDaysInMonth = new Date(yr, mnth, 0).getDate()
+  const dayOfDate = cd => new Date(yr, mnth -1,cd)
+  const datePresence = tgl => new Date(tgl).getTime()
+
+  const findUser = getUsers().filter(u => u.user === "novapriyaa25@gmail.com")
+  const getPresenceByDate = (tgl) => {
+    return findUser.find(u => datePresence(u.date) === dayOfDate(tgl).getTime())
+  }
+
+  for(var i = 1;i <= getDaysInMonth;i++){
+
+    if(typeof getPresenceByDate(i) !== 'undefined' ){
+      console.log(getPresenceByDate(i))
+    }
+
+  }
 
 }
 
+
 function hitungJmlMasuk(email){
 
-  const jmlAbsen = getUsers().filter((u) => u.user === email && validateMasuk(u)) 
+  const jmlAbsen = getUsers().filter((u) => u.user === email && validateMasuk(u))
+                      .map((p) => {
+
+                        const tgl = p.date.toLocaleString().split(",")[0]
+                        const wkt = new Date(p.time).toLocaleTimeString()                        
+                        
+                        return { user: p.user , timePresence: tgl + " " + wkt, status: p.status }
+
+                      })
   return jmlAbsen;
 
 }
@@ -93,12 +90,29 @@ function validateMasuk(arg){
 
 function hitungJmlPulang(email){
 
-  const jmlAbsen = getUsers().filter((u) => u.user === email && validatePulang(u)) 
+  const jmlAbsen = getUsers().filter((u) => u.user === email && validatePulang(u))
+                    .map((p) => {
+            
+                      const tgl = p.date.toLocaleString().split(",")[0]
+                      const wkt = new Date(p.time).toLocaleTimeString()                        
+                      
+                      return { user: p.user , timePresence: tgl + " " + wkt, status: p.status }
+
+                  })
+
   return jmlAbsen;
 
 }
 
 function validatePulang(arg){
+
+  /*
+
+    get shift 
+    jika shift pagi, validasi rule absen shift pagi
+    jika shift malam, validasi rule absen shift malam
+
+  */
 
   const tgl = arg.date.toLocaleString().split(",")[0]
   const wkt = new Date(arg.time).toLocaleTimeString()
@@ -113,6 +127,16 @@ function validatePulang(arg){
   }
 
 }
+
+
+  // for(var i = 1;i <= getLastDay();i++){
+
+  //   const data = finByDate.find(d => getTgl(d.date) === getDaysInMonth(i).getTime())
+  //   if(typeof data !== 'undefined'){
+  //     console.log(data)
+  //   }
+
+  // }
 
 
 
