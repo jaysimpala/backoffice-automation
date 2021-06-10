@@ -1,6 +1,11 @@
 function myFunction() {
 
-  console.log(countPresence("fahrisyaifullah@gmail.com"))
+  employes.map(u => {
+    console.log(countPresence(u.email))
+  })
+
+  // console.log(countPresence("hartosin0798@gmail.com"))
+  // // countPresence("hartosin0798@gmail.com")
 
 }
 
