@@ -15,52 +15,62 @@ function countPresence(email){
 
   var presence = 0
   var absent = 0
-  
-  for(var i = 1;i <= getDaysInMonth;i++){
 
-    if(typeof getPresenceByDate(i) !== 'undefined' ){
-      const data = getPresenceByDate(i)
-      if(data.length > 0){
-        if(data[0].shift === 'Malam'){
-          if(data.length == 2){
-              if(validatePresence(data[0].status) && validatePresence(data[1].status)){
-                presence += 1
-              }else if(validateAbsent(data[0].status) || validateAbsent(data[1].status)){
-                absent += 1
-              }else{
-                false
-              }
-          }else if(data.length == 1){
+   for(var i = 1;i <= getDaysInMonth;i++){
+    
+     if(typeof getPresenceByDate(i) !== 'undefined' ){
+       const data = getPresenceByDate(i)
+       let getShift = [...new Set(data.map(d => d.shift))]
 
-            if(validatePresence(data[0].status)){
-              presence += 1
-            }else{
-              absent += 1
-            }
-
-          }else{
-            presence += 0
-          }
-        }else{
+        if(data.length == 1){
+          
           if(validatePresence(data[0].status)){
             presence += 1
           }else{
             absent += 1
           }
+        }else if(data.length == 2){
+          if(validatePresence(data[0].status) && validatePresence(data[1].status)){
+            presence += 1
+          }else if(validatePresence(data[0].status) || validatePresence(data[1].status)){
+            presence += 1
+          }else if(getShift.includes("Malam") && getShift.includes("Pagi")){
+            presence += 2
+          }else{
+            presence += 0
+          }
+        }else if(data.length == 3){
+          if(getShift.includes("Malam") && getShift.includes("Pagi")){
+            presence += 2
+          }
         }
+        
       }
+     
     }
-  }
+  
+ 
 
-  if(findUser[0].shift === 'Malam'){
-    return `${email} : Total Presensi ${presence } - Absent : ${absent}`
-  }else{
-     return `${email} : Total Presensi ${presence} - Absent : ${absent}`
-  }
+  // perhitungan baru
+  // absen masuk dan pulang || masuk terlambat += 1
+  // jika masuk shift baru += 2
+    // presensi di hitung masuk 2 shift jika absen di tgl yang sama
+    // jika ada shift Pagi dan Malam
+  
+
+
+
+
+
+  // if(findUser[0].shift === 'Malam'){
+  //   return {email: email, presence: presence, absent: absent}
+  // }else{
+  //    return {email: email, presence: presence, absent: absent}
+  // }
+
+  return {email: email, presence: presence, absent: absent}
 
 }
-
-// "MASUK SHIFT PAGI","PULANG SHIFT PAGI","MASUK SHIFT MALAM","PULANG SHIFT MALAM","ABSEN TERLAMBAT","Izin","Sakit"
 
 function validatePresence(status){
 
@@ -82,6 +92,40 @@ function validateAbsent(status){
   
 }
 
+//  for(var i = 1;i <= getDaysInMonth;i++){
+
+//     if(typeof getPresenceByDate(i) !== 'undefined' ){
+//       const data = getPresenceByDate(i)
+//       // console.log(data)
+//       if(typeof data !== 'undefined'){
+//         //  console.log(data)
+//         if(data.length == 1){
+//           if(validatePresence(data[0].status)){
+//             presence += 1
+//           }else{
+//             absent += 1
+//           }
+//         }else if( data.length == 2){
+//           if(data[0].shift === 'Pagi'){
+//             if(validatePresence(data[0].status) && validatePresence(data[1].status)){
+//               presence += 1
+//             }
+//           }else if(validatePresence(data[1].status) && validatePresence(getPresenceByDate(i+1)[0].status)){
+//             presence += 1
+//           }else if(validateAbsent(data[0].status) || validateAbsent(data[1].status)) {
+//             absent += 1
+//           }
+//         }else if(data.length === 3){    
+//           if(data.some(d => d.status === 'MASUK SHIFT MALAM') ||
+//              getPresenceByDate(i+1).some(d => d.status === 'MASUK SHIFT PAGI') ){
+//             presence += 2
+//           }else if(validatePresence(data[1].status) && validatePresence(data[2].status)){
+//               presence += 1
+//           }
+//         }
+//       }
+//     }
+//   }
 
 
 
