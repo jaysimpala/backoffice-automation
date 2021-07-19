@@ -1,4 +1,4 @@
-function countPresence(email){
+function countPresence(email, fullName){
 
   const dt = new Date()
   const mnth = dt.getMonth()
@@ -13,62 +13,77 @@ function countPresence(email){
     return findUser.filter(u => datePresence(u.date) === dayOfDate(tgl).getTime())
   }
 
-  var presence = 0
-  var absent = 0
+  let previousMonth = getPresencePreviousMonth(email)
+
+  var lembur = 0 + previousMonth.lembur;
+  var presence = 0 + previousMonth.presence;
+  var absent = 0 + previousMonth.absent;
+
+      // var lembur = 0
+      // var presence = 0
+      // var absent = 0
 
    for(var i = 1;i <= getDaysInMonth;i++){
+
+     // check presensi berdasarkan shift
     
-     if(typeof getPresenceByDate(i) !== 'undefined' ){
+      if(typeof getPresenceByDate(i) !== 'undefined' ){
        const data = getPresenceByDate(i)
-       let getShift = [...new Set(data.map(d => d.shift))]
+      //  console.log(data)
+       
+      let getShift = [...new Set(data.map(d => d.shift))]
 
-        if(data.length == 1){
-          
-          if(validatePresence(data[0].status)){
-            presence += 1
-          }else{
-            absent += 1
+              if(data.length == 1){
+                if(validatePresence(data[0].status)){
+                  if(data[0].note == 'Lembur'){
+                    lembur += 1
+                  }else{
+                    presence += 1
+                  }      
+                }else{
+                  absent += 1
+                }
+              }else if(data.length == 2){
+                if(validatePresence(data[0].status) && validatePresence(data[1].status)){
+                  if(data[0].note == 'Lembur' || data[1].note == 'Lembur'){
+                    lembur += 1
+                  }else{
+                    presence += 1
+                  }
+                }else if(validatePresence(data[1].status)){
+                  if(data[1].note){
+                    lembur += 1
+                  }else{
+                    presence += 1
+                  }
+                }else if(getShift.includes("Malam") && getShift.includes("Pagi")){
+                  if(data[0].note == 'Lembur' || data[1].note == 'Lembur'){
+                    lembur += 1
+                    presence += 1
+                  }else{
+                    presence += 2
+                  }
+                }else if(validateAbsent(data[1].status)){
+                  absent += 1
+                }else{
+                  presence += 0
+                }
+              }else if(data.length == 3){
+                if(getShift.includes("Malam") && getShift.includes("Pagi")){
+                  if(data[0].note == 'Lembur' || data[1].note == 'Lembur' || data[2].note == 'Lembur'){
+                    lembur += 1
+                    presence += 1
+                  }else{
+                    presence += 2
+                  }
+                }
+              } 
           }
-        }else if(data.length == 2){
-          if(validatePresence(data[0].status) && validatePresence(data[1].status)){
-            presence += 1
-          }else if(validatePresence(data[0].status) || validatePresence(data[1].status)){
-            presence += 1
-          }else if(getShift.includes("Malam") && getShift.includes("Pagi")){
-            presence += 2
-          }else{
-            presence += 0
-          }
-        }else if(data.length == 3){
-          if(getShift.includes("Malam") && getShift.includes("Pagi")){
-            presence += 2
-          }
-        }
-        
       }
-     
-    }
   
- 
-
-  // perhitungan baru
-  // absen masuk dan pulang || masuk terlambat += 1
-  // jika masuk shift baru += 2
-    // presensi di hitung masuk 2 shift jika absen di tgl yang sama
-    // jika ada shift Pagi dan Malam
   
-
-
-
-
-
-  // if(findUser[0].shift === 'Malam'){
-  //   return {email: email, presence: presence, absent: absent}
-  // }else{
-  //    return {email: email, presence: presence, absent: absent}
-  // }
-
-  return {email: email, presence: presence, absent: absent}
+  
+  return {fullName: fullName, email: email, presence: presence, absent: absent, lembur: lembur}
 
 }
 
@@ -92,40 +107,135 @@ function validateAbsent(status){
   
 }
 
-//  for(var i = 1;i <= getDaysInMonth;i++){
+function getPresencePreviousMonth(email){
 
-//     if(typeof getPresenceByDate(i) !== 'undefined' ){
-//       const data = getPresenceByDate(i)
-//       // console.log(data)
-//       if(typeof data !== 'undefined'){
-//         //  console.log(data)
-//         if(data.length == 1){
-//           if(validatePresence(data[0].status)){
-//             presence += 1
-//           }else{
-//             absent += 1
-//           }
-//         }else if( data.length == 2){
-//           if(data[0].shift === 'Pagi'){
-//             if(validatePresence(data[0].status) && validatePresence(data[1].status)){
-//               presence += 1
-//             }
-//           }else if(validatePresence(data[1].status) && validatePresence(getPresenceByDate(i+1)[0].status)){
-//             presence += 1
-//           }else if(validateAbsent(data[0].status) || validateAbsent(data[1].status)) {
-//             absent += 1
-//           }
-//         }else if(data.length === 3){    
-//           if(data.some(d => d.status === 'MASUK SHIFT MALAM') ||
-//              getPresenceByDate(i+1).some(d => d.status === 'MASUK SHIFT PAGI') ){
-//             presence += 2
-//           }else if(validatePresence(data[1].status) && validatePresence(data[2].status)){
-//               presence += 1
-//           }
-//         }
-//       }
-//     }
-//   }
+  const dt = new Date()
+  const mnth = dt.getMonth()
+  const yr = dt.getFullYear()
+
+  const getDaysInMonth = new Date(yr, mnth, 0).getDate()
+  const dayOfDate = cd => new Date(yr, mnth-1,cd)
+  const datePresence = tgl => new Date(tgl).getTime()
+
+  const findUser = getUsers().filter(u => u.user === email)
+  const getPresenceByDate = (tgl) => {
+    return findUser.filter(u => datePresence(u.date) === dayOfDate(tgl).getTime())
+  }
+
+  var lembur = 0;
+  var presence = 0
+  var absent = 0
+
+   for(var i = 30;i <= getDaysInMonth;i++){
+    
+     if(typeof getPresenceByDate(i) !== 'undefined' ){
+       const data = getPresenceByDate(i)
+      //  console.log(data)
+       
+       let getShift = [...new Set(data.map(d => d.shift))]
+
+        if(data.length == 1){
+          if(validatePresence(data[0].status)){
+            if(data[0].note == 'Lembur'){
+              lembur += 1
+            }else{
+              presence += 1
+            }      
+          }else{
+            absent += 1
+          }
+        }else if(data.length == 2){
+          if(validatePresence(data[0].status) && validatePresence(data[1].status)){
+            if(data[0].note == 'Lembur' || data[1].note == 'Lembur'){
+              lembur += 1
+            }else{
+              presence += 1
+            }
+          }else if(validatePresence(data[1].status)){
+            if(data[1].note){
+              lembur += 1
+            }else{
+              presence += 1
+            }
+          }else if(getShift.includes("Malam") && getShift.includes("Pagi")){
+            if(data[0].note == 'Lembur' || data[1].note == 'Lembur'){
+              lembur += 1
+              presence += 1
+            }else{
+              presence += 2
+            }
+          }else if(validateAbsent(data[1].status)){
+            absent += 1
+          }else{
+            presence += 0
+          }
+        }else if(data.length == 3){
+          if(getShift.includes("Malam") && getShift.includes("Pagi")){
+            if(data[0].note == 'Lembur' || data[1].note == 'Lembur' || data[2].note == 'Lembur'){
+              lembur += 1
+              presence += 1
+            }else{
+              presence += 2
+            }
+          }
+        } 
+      }
+    }
+
+  return {presence: presence, absent: absent, lembur: lembur}
+
+}
+
+
+
+  // let getShift = [...new Set(data.map(d => d.shift))]
+
+  //       if(data.length == 1){
+  //         if(validatePresence(data[0].status)){
+  //           if(data[0].note == 'Lembur'){
+  //             lembur += 1
+  //           }else{
+  //             presence += 1
+  //           }      
+  //         }else{
+  //           absent += 1
+  //         }
+  //       }else if(data.length == 2){
+  //         if(validatePresence(data[0].status) && validatePresence(data[1].status)){
+  //           if(data[0].note == 'Lembur' || data[1].note == 'Lembur'){
+  //             lembur += 1
+  //           }else{
+  //             presence += 1
+  //           }
+  //         }else if(validatePresence(data[1].status)){
+  //           if(data[1].note){
+  //             lembur += 1
+  //           }else{
+  //             presence += 1
+  //           }
+  //         }else if(getShift.includes("Malam") && getShift.includes("Pagi")){
+  //           if(data[0].note == 'Lembur' || data[1].note == 'Lembur'){
+  //             lembur += 1
+  //             presence += 1
+  //           }else{
+  //             presence += 2
+  //           }
+  //         }else if(validateAbsent(data[1].status)){
+  //           absent += 1
+  //         }else{
+  //           presence += 0
+  //         }
+  //       }else if(data.length == 3){
+  //         if(getShift.includes("Malam") && getShift.includes("Pagi")){
+  //           if(data[0].note == 'Lembur' || data[1].note == 'Lembur' || data[2].note == 'Lembur'){
+  //             lembur += 1
+  //             presence += 1
+  //           }else{
+  //             presence += 2
+  //           }
+  //         }
+  //       } 
+  //     }
 
 
 
